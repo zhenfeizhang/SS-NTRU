@@ -84,4 +84,39 @@ int decrypt_cca(
           int64_t   *buf,
     const PARAM_SET *param);
 
+
+void
+pack_ring_element(
+    unsigned char   *str,
+    const PARAM_SET *param,
+    const int64_t   *ring);
+
+void
+unpack_ring_element(
+    const unsigned char
+                    *str,
+    PARAM_SET       *param,
+    int64_t         *ring);
+
+/*
+ * check if a message length is valid for ntruencrypt-cca
+ * then convert the message into a binary polynomial and
+ * pad the message with a random binary string p
+ */
+int
+pad_msg(
+          int64_t   *m,     /* output message */
+    const char      *msg,   /* input message string */
+    const size_t    msg_len,/* input length of the message */
+    const PARAM_SET *param);
+/*
+ * converting a binary polynomial into a char string
+ * return the length of the message string
+ */
+int
+recover_msg(
+          char      *msg,   /* output message string */
+    const int64_t   *m,     /* input binary message */
+    const PARAM_SET *param);
+
 #endif /* NTRUENCRYPT_H_ */

@@ -162,6 +162,7 @@ decrypt_kem(
         mntt[i] = modq(fntt[i]*cntt[i],param->q);
 
     INTT(m, mntt, param);
+
     for (i=0;i<param->N;i++)
     {
         if (m[i]>param->q/2)
@@ -176,7 +177,7 @@ decrypt_kem(
  * then convert the message into a binary polynomial and
  * pad the message with a random binary string p
  */
-static int
+int
 pad_msg(
           int64_t   *m,     /* output message */
     const char      *msg,   /* input message string */
@@ -359,7 +360,7 @@ encrypt_cca(
  * converting a binary polynomial into a char string
  * return the length of the message string
  */
-static int
+int
 recover_msg(
           char      *msg,   /* output message string */
     const int64_t   *m,     /* input binary message */

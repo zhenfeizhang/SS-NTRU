@@ -17,7 +17,11 @@
 #include "NTRUEncrypt.h"
 #include "param.h"
 #include "poly/poly.h"
+#include "api.h"
 
+
+unsigned char   rndness[32] = "source of randomness";
+unsigned char   msg[32]     = "nist submission";
 
 int get_len(char *c)
 {
@@ -27,7 +31,7 @@ int get_len(char *c)
     return len;
 }
 
-int main(void) {
+int test_basics(void) {
 
 
     uint16_t    i;
@@ -180,4 +184,112 @@ int main(void) {
     printf("!!!Hello OnBoard Security!!!\n"); /* prints !!!Hello OnBoard Security!!! */
     free(mem);
     return EXIT_SUCCESS;
+}
+
+void test_nist_api_kem()
+{
+    printf("===============================\n");
+    printf("===============================\n");
+    printf("===============================\n");
+    printf("testing NIST KEM API\n");
+
+    int     i;
+    unsigned char       *m, *c, *mr;
+    unsigned char       *pk, *sk;
+
+
+    pk  = malloc(sizeof(unsigned char)* 4200*2);
+    sk  = malloc(sizeof(unsigned char)* 4200*2);
+    m   = malloc(sizeof(unsigned char)* 4200*2);
+    c   = malloc(sizeof(unsigned char)* 4200*2);
+    mr  = malloc(sizeof(unsigned char)* 4200*2);
+
+    printf("Let's try to encrypt a message:\n");
+    for(i=0;i<32; i++)
+    {
+        m[i] = rand();
+        printf("%d, ", m[i]);
+    }
+    printf("\n");
+
+
+
+    crypto_kem_keygenerate(pk, sk);
+
+
+    crypto_kem_encapsulate(c, m, pk);
+
+
+    crypto_kem_decapsulate(mr, c, sk);
+
+    printf("recovered message: \n" );
+    for(i=0;i< 32; i++)
+        printf("%d, ", mr[i]);
+    printf("\n");
+
+
+    free(pk);
+    free(sk);
+    free(m);
+    free(c);
+    free(mr);
+    puts("!!!Hello OnBoard Security!!!");
+
+}
+
+
+void test_nist_api_cca()
+{
+    printf("===============================\n");
+    printf("===============================\n");
+    printf("===============================\n");
+    printf("testing NIST CCA API\n");
+
+    int     i;
+    unsigned char       *m, *c, *mr;
+    unsigned char       *pk, *sk;
+    unsigned long long  msg_len, c_len;
+
+    pk  = malloc(sizeof(unsigned char)* 4200*2);
+    sk  = malloc(sizeof(unsigned char)* 4200*2);
+    m   = malloc(sizeof(unsigned char)* 4200*2);
+    c   = malloc(sizeof(unsigned char)* 4200*2);
+    mr  = malloc(sizeof(unsigned char)* 4200*2);
+
+    printf("Let's try to encrypt a message: %s\n", msg);
+
+    crypto_encrypt_keypair(pk, sk);
+    printf("key generated, public key:\n");
+
+    msg_len = get_len((char*)msg);
+    crypto_encrypt(c, &c_len,  msg, msg_len, pk);
+    printf("encryption complete, ciphtertext of length %d:\n", (int) c_len);
+    for (i=0;i<c_len;i++)
+        printf("%d, ", (int)c[i]);
+    printf("\n");
+
+
+    msg_len = 0;
+    crypto_encrypt_open(m, &msg_len, c, c_len, sk);
+
+    printf("recovered message with length %d: %s\n", (int)msg_len, m );
+
+    free(pk);
+    free(sk);
+    free(m);
+    free(c);
+    free(mr);
+    puts("!!!Hello OnBoard Security!!!");
+
+}
+
+int main()
+{
+    test_basics();
+    if (TEST_PARAM_SET == NTRU_CCA_1024)
+        test_nist_api_cca();
+    else
+        test_nist_api_kem();
+
+
 }
