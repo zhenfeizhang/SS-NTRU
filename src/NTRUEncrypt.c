@@ -215,7 +215,7 @@ pad_msg(
  * generate a Gaussian r from msg and hntt
  * memory requirement: 2 * LENGTH_OF_HASH
  */
-static int
+int
 generate_r(
           int64_t   *r,     /* output r */
     const int64_t   *msg,   /* input binary message */
@@ -249,7 +249,7 @@ generate_r(
  * input a message msg, output msg \xor hash(last_bit_of_rh)
  * memory requirements: LENGTH_OF_HASH
  */
-static int
+int
 mask_m(
           int64_t   *msg,   /* in/output binary message */
     const int64_t   *rh,

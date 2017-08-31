@@ -28,7 +28,7 @@ int crypto_encrypt_keypair(
     /* memory for 3 ring elements: f, g and h */
     mem     = malloc (sizeof(int64_t)*param->N * 3);
     buf     = malloc (sizeof(int64_t)*param->N * 2);
-    if (!mem )
+    if (!mem || !buf)
     {
         printf("malloc error!\n");
         return -1;
@@ -76,6 +76,12 @@ int crypto_encrypt(
     int64_t    *buf, *mem, *hntt, *cpoly;
     mem     = malloc(sizeof(int64_t)*param->N*2);
     buf     = malloc(sizeof(int64_t)*param->N*7 + LENGTH_OF_HASH*2);
+    if (!mem || !buf )
+    {
+        printf("malloc error!\n");
+        return -1;
+    }
+
     hntt    = mem;
     cpoly   = hntt  + param->N;
 
@@ -121,6 +127,13 @@ int crypto_encrypt_open(
     int64_t    *buf, *mem, *f, *cpoly, *mpoly, *hntt;
     mem     = malloc(sizeof(int64_t)*param->N*4);
     buf     = malloc(sizeof(int64_t)*param->N*7 + LENGTH_OF_HASH*2);
+
+    if (!mem || !buf )
+    {
+        printf("malloc error!\n");
+        return -1;
+    }
+
     f       = mem;
     cpoly   = f     + param->N;
     mpoly   = cpoly + param->N;
@@ -153,7 +166,51 @@ int crypto_encrypt_keypair_KAT(
     unsigned char       *sk,
     const unsigned char *randomness)
 {
+    int64_t     *f, *g, *hntt, *buf, *mem;
+    PARAM_SET   *param;
+    unsigned char *seed;
+    unsigned char salt[32] = "CCA_KAT|KEY_GEN|CCA_KAT|KEY_GEN|";
 
+    param   = get_param_set_by_id(TEST_PARAM_SET);
+
+    seed    = malloc(LENGTH_OF_HASH);
+    /* memory for 3 ring elements: f, g and h */
+    mem     = malloc (sizeof(int64_t)*param->N * 3);
+    buf     = malloc (sizeof(int64_t)*param->N * 2);
+    if (!mem || !buf || !seed)
+    {
+        printf("malloc error!\n");
+        return -1;
+    }
+
+    f       = mem;
+    g       = f   + param->N;
+    hntt    = g   + param->N;
+
+
+    memcpy(seed,    randomness, 32);
+    memcpy(seed+32, salt,       32);
+    int i;
+    printf("seed:\n");
+    for (i=0;i<LENGTH_OF_HASH;i++)
+        printf("%c,", seed[i]);
+    printf("\n");
+
+    keygen_KAT(f,g,hntt,buf,param,seed);
+
+    /* pack h into pk */
+    pack_ring_element(pk, param, hntt);
+
+    /* pack F into sk */
+    pack_ring_element(sk, param, f);
+    pack_ring_element(sk+param->N*sizeof(int32_t)/sizeof(unsigned char)+1, param, hntt);
+
+    memset(mem,0, sizeof(int64_t)*param->N*3);
+    memset(buf,0, sizeof(int64_t)*param->N*2);
+    memset(seed,0, LENGTH_OF_HASH);
+    free(mem);
+    free(buf);
+    free(seed);
 
     return 0;
 }
@@ -168,7 +225,59 @@ int crypto_encrypt_KAT(
     const unsigned char *randomness)
 {
 
+    PARAM_SET   *param;
+
+    param   =   get_param_set_by_id(pk[0]);
+    if (param->id!=NTRU_CCA_1024)
+    {
+        printf("unsupported parameter sets\n");
+        return -1;
+    }
+
+    unsigned char *seed;
+    unsigned char salt[32] = "CCA_KAT|ENCRYPT|CCA_KAT|ENCRYPT|";
+
+    int64_t    *buf, *mem, *hntt, *cpoly;
+    seed    = malloc(LENGTH_OF_HASH);
+    mem     = malloc(sizeof(int64_t)*param->N*2);
+    buf     = malloc(sizeof(int64_t)*param->N*7 + LENGTH_OF_HASH*2);
+    if (!mem || !buf || !seed )
+    {
+        printf("malloc error!\n");
+        return -1;
+    }
+
+    hntt    = mem;
+    cpoly   = hntt  + param->N;
 
 
+    memset(mem,0, sizeof(int64_t)*param->N*2);
+    memset(buf,0, sizeof(int64_t)*param->N*7 + LENGTH_OF_HASH*2);
+
+    unpack_ring_element(pk, param, hntt);
+
+    memcpy(seed,    randomness, 32);
+    memcpy(seed+32, salt,       32);
+
+    int i;
+
+    printf("seed:\n");
+    for (i=0;i<LENGTH_OF_HASH;i++)
+        printf("%c,", seed[i]);
+    printf("\n");
+
+    encrypt_cca_KAT(cpoly, (char*) m, mlen, hntt, buf, param, seed);
+
+    pack_ring_element (c, param, cpoly);
+
+    *clen = param->N*sizeof(int32_t)/sizeof(unsigned char)+1;
+
+
+    memset(mem,0, sizeof(int64_t)*param->N*2);
+    memset(buf,0, sizeof(int64_t)*param->N*7 + LENGTH_OF_HASH*2);
+    memset(seed,0, LENGTH_OF_HASH);
+    free(mem);
+    free(buf);
+    free(seed);
     return 0;
 }

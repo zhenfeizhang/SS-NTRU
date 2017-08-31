@@ -8,7 +8,7 @@
 #ifndef API_H_
 #define API_H_
 
-#define TEST_SS_NTRU_KEM
+#define TEST_SS_NTRU_CCA
 
 
 

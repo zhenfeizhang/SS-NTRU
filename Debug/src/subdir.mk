@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../src/KAT.c \
 ../src/NTRUEncrypt.c \
 ../src/encrypt.c \
 ../src/kem.c \
@@ -12,6 +13,7 @@ C_SRCS += \
 ../src/test.c 
 
 OBJS += \
+./src/KAT.o \
 ./src/NTRUEncrypt.o \
 ./src/encrypt.o \
 ./src/kem.o \
@@ -20,6 +22,7 @@ OBJS += \
 ./src/test.o 
 
 C_DEPS += \
+./src/KAT.d \
 ./src/NTRUEncrypt.d \
 ./src/encrypt.d \
 ./src/kem.d \
